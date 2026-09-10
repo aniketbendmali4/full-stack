@@ -2,4 +2,9 @@ fastapi
 uvicorn
 supabase
 python-dotenv
+<<<<<<< HEAD
 pydantic
+=======
+gradio
+requests
+>>>>>>> 519c0ccbc334655bc1a2a0d3055d56d570a250bf
