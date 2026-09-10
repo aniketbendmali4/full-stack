@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Management Portal</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation / Header -->
+  <header class="app-header">
+    <div class="container header-content">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Student Portal</h1>
+          <p class="subtitle">Presented by Aniket Bendmali</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Stat Cards Overview -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Total Students</span>
+          <span class="stat-value" id="stat-total">0</span>
+        </div>
+        <div class="stat-icon purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Average Marks</span>
+          <span class="stat-value" id="stat-avg">0</span>
+        </div>
+        <div class="stat-icon emerald">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-info">
+          <span class="stat-label">Top Score</span>
+          <span class="stat-value" id="stat-top">0</span>
+        </div>
+        <div class="stat-icon amber">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="7"></circle>
+            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid: Left is Form, Right is Table -->
+    <div class="content-grid">
+      <!-- Add Student Card -->
+      <section class="card form-card">
+        <div class="card-header">
+          <h2>Add New Student</h2>
+          <p>Enter details to insert a record into Supabase</p>
+        </div>
+        <form id="add-student-form">
+          <div class="form-group">
+            <label for="student-name">Student Full Name</label>
+            <input 
+              type="text" 
+              id="student-name" 
+              name="name" 
+              placeholder="e.g. Alex Johnson" 
+              required 
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="student-course">Course Name</label>
+            <input 
+              type="text" 
+              id="student-course" 
+              name="course" 
+              placeholder="e.g. Data Structures, Python, AI" 
+              required 
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="student-marks">Marks (0 - 100)</label>
+            <input 
+              type="number" 
+              id="student-marks" 
+              name="marks" 
+              min="0" 
+              max="100" 
+              placeholder="e.g. 88" 
+              required 
+            />
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-primary">
+            <span class="btn-text">Add Student</span>
+            <span class="btn-spinner" style="display: none;"></span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Students List Card -->
+      <section class="card table-card">
+        <div class="card-header table-header-flex">
+          <div>
+            <h2>Enrolled Students</h2>
+            <p>Live synchronized list from database</p>
+          </div>
+          <div class="table-actions">
+            <div class="search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input 
+                type="text" 
+                id="search-input" 
+                placeholder="Filter by name or course..." 
+              />
+            </div>
+            <button id="refresh-btn" class="btn btn-icon" title="Refresh List">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">ID</th>
+                <th>Student Name</th>
+                <th>Course</th>
+                <th style="width: 110px;">Marks</th>
+                <th style="width: 120px; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+
+          <!-- Empty / Loading State -->
+          <div id="table-loading" class="table-message" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading records from Supabase...</p>
+          </div>
+
+          <div id="table-empty" class="table-message" style="display: none;">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <p id="empty-message">No students found</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Edit Student Modal -->
+  <div id="edit-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Edit Student Details</h3>
+        <button class="modal-close" id="modal-close-btn">&times;</button>
+      </div>
+      <form id="edit-student-form">
+        <input type="hidden" id="edit-id" />
+        <div class="form-group">
+          <label for="edit-name">Student Full Name</label>
+          <input type="text" id="edit-name" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-course">Course Name</label>
+          <input type="text" id="edit-course" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-marks">Marks (0 - 100)</label>
+          <input type="number" id="edit-marks" min="0" max="100" required />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="modal-save-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
