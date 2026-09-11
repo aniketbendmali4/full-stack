@@ -5,9 +5,12 @@
 
 // Host candidates to connect to FastAPI
 const RAILWAY_BACKEND = 'https://full-stack-production-8a5c.up.railway.app';
-let API_BASE = (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000' || window.location.port === '5173') 
-  ? RAILWAY_BACKEND 
-  : (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://127.0.0.1:8000' : window.location.origin);
+
+// Always use Railway backend for API calls (works on Vercel, Railway, Live Server, file://)
+// Only use localhost if explicitly running on local backend port 8000
+let API_BASE = (window.location.protocol.startsWith('http') && window.location.port === '8000') 
+  ? window.location.origin 
+  : RAILWAY_BACKEND;
 
 // App state
 let allStudents = [];
@@ -57,12 +60,11 @@ function showToast(message, type = 'success') {
   }, 3500);
 }
 
-// Resilient fetch with fallback between Railway, current origin, and local server
+// Resilient fetch with fallback between Railway, local host, and current origin
 async function apiFetch(endpoint, options = {}) {
   const hosts = [
     API_BASE,
     RAILWAY_BACKEND,
-    window.location.origin,
     'http://127.0.0.1:8000',
     'http://localhost:8000'
   ].filter(Boolean);
@@ -71,7 +73,7 @@ async function apiFetch(endpoint, options = {}) {
   let lastError = null;
   for (const host of uniqueHosts) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout for cold starts
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for cold starts
 
     try {
       const res = await fetch(`${host}${endpoint}`, {
@@ -79,6 +81,13 @@ async function apiFetch(endpoint, options = {}) {
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+
+      // If a host returns 404, it means the API route does not exist on this host (e.g. static host like Vercel)
+      // Fallback to the next host candidate
+      if (res.status === 404 && host !== RAILWAY_BACKEND) {
+        continue;
+      }
+
       API_BASE = host; // Save working host
       return res;
     } catch (err) {

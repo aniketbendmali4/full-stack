@@ -1,14 +1,32 @@
 {
-  "builds": [
+  "rewrites": [
     {
-      "src": "backend/main.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
+      "source": "/students",
+      "destination": "https://full-stack-production-8a5c.up.railway.app/students"
+    },
     {
-      "src": "/(.*)",
-      "dest": "backend/main.py"
+      "source": "/students/(.*)",
+      "destination": "https://full-stack-production-8a5c.up.railway.app/students/$1"
+    },
+    {
+      "source": "/health",
+      "destination": "https://full-stack-production-8a5c.up.railway.app/health"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://full-stack-production-8a5c.up.railway.app/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://full-stack-production-8a5c.up.railway.app/openapi.json"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
     }
   ]
 }
