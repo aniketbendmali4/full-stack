@@ -5,7 +5,7 @@
 
 // Host candidates to connect to FastAPI
 let API_BASE = (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000') 
-  ? 'http://127.0.0.1:8000' 
+  ? 'full-stack-production-8a5c.up.railway.app' 
   : window.location.origin;
 
 // App state
