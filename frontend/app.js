@@ -4,9 +4,9 @@
  */
 
 // Host candidates to connect to FastAPI
-let API_BASE = (window.location.protocol.startsWith('http') && window.location.port === '8000') 
-  ? window.location.origin 
-  : 'http://127.0.0.1:8000';
+let API_BASE = (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000') 
+  ? 'http://127.0.0.1:8000' 
+  : window.location.origin;
 
 // App state
 let allStudents = [];
@@ -60,9 +60,10 @@ function showToast(message, type = 'success') {
 async function apiFetch(endpoint, options = {}) {
   const hosts = [
     API_BASE,
+    window.location.origin,
     'http://127.0.0.1:8000',
     'http://localhost:8000'
-  ];
+  ].filter(Boolean);
   const uniqueHosts = [...new Set(hosts)];
 
   let lastError = null;

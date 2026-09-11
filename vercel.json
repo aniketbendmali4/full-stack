@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/students",
+      "destination": "main.py"
+    },
+    {
+      "source": "/students/(.*)",
+      "destination": "main.py"
+    },
+    {
+      "source": "/docs",
+      "destination": "main.py"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "main.py"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ]
+}
