@@ -76,20 +76,7 @@ class StudentUpdatePayload(BaseModel):
     marks: Optional[int] = None
 
 
-@app.get("/health")
-def health_check():
-    url = (os.getenv("SUPABASE_URL") or "").strip()
-    key = (os.getenv("SUPABASE_KEY") or "").strip()
-    if url.startswith("ey") and (key.startswith("http://") or key.startswith("https://")):
-        url, key = key, url
-    elif not url.startswith("http") and "supabase.co" in key:
-        url, key = key, url
 
-    return {
-        "status": "ok",
-        "supabase_configured": bool(url and key),
-        "supabase_url": url if url else None
-    }
 
 
 @app.post("/students")
