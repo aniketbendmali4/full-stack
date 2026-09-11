@@ -2,5 +2,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
-.env
+.env*
 .vercel/
+.DS_Store
+
