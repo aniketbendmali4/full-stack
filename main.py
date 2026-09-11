@@ -22,15 +22,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Get Supabase credentials
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# Supabase client singleton with lazy loading
+supabase_client = None
 
-# Connect Python to Supabase
-supabase = create_client(
-    SUPABASE_URL,
-    SUPABASE_KEY
-)
+def get_supabase():
+    global supabase_client
+    if supabase_client is not None:
+        return supabase_client
+
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    if not url or not key:
+        raise HTTPException(
+            status_code=500,
+            detail="Supabase credentials missing. Set SUPABASE_URL and SUPABASE_KEY in environment variables."
+        )
+    supabase_client = create_client(url, key)
+    return supabase_client
+
+# Safe eager init if credentials exist
+try:
+    _url = os.getenv("SUPABASE_URL")
+    _key = os.getenv("SUPABASE_KEY")
+    if _url and _key:
+        supabase_client = create_client(_url, _key)
+except Exception:
+    pass
 
 # Pydantic models for JSON body support
 class StudentCreatePayload(BaseModel):
@@ -65,12 +82,8 @@ def create_student(
         "marks": int(student_marks)
     }
 
-    response = (
-        supabase
-        .table("students")
-        .insert(student)
-        .execute()
-    )
+    db = get_supabase()
+    response = db.table("students").insert(student).execute()
     
     return {
         "message": "Student created successfully",
@@ -80,12 +93,8 @@ def create_student(
 
 @app.get("/students")
 def show_all_student():
-    response = (
-        supabase
-        .table("students")
-        .select("*")
-        .execute()
-    )
+    db = get_supabase()
+    response = db.table("students").select("*").execute()
     return {
         "message": "All students",
         "data": response.data
@@ -116,13 +125,8 @@ def update_student(
     if student_marks is not None:
         student["marks"] = int(student_marks)
 
-    response = (
-        supabase
-        .table("students")
-        .update(student)
-        .eq("id", target_id)
-        .execute()
-    )
+    db = get_supabase()
+    response = db.table("students").update(student).eq("id", target_id).execute()
 
     return {
         "message": f"Data of id {target_id} updated successfully.",
@@ -132,13 +136,8 @@ def update_student(
 
 @app.delete("/students")
 def delete_student(id: int):
-    response = (
-        supabase
-        .table("students")
-        .delete()
-        .eq("id", id)
-        .execute()
-    )
+    db = get_supabase()
+    response = db.table("students").delete().eq("id", id).execute()
     return {
         "message": f"Data of id {id} deleted successfully.",
         "data": response.data

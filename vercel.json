@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/students",
-      "destination": "main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/students/(.*)",
-      "destination": "main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/docs",
-      "destination": "main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/openapi.json",
-      "destination": "main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/(.*)",
