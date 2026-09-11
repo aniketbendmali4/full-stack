@@ -30,8 +30,15 @@ def get_supabase():
     if supabase_client is not None:
         return supabase_client
 
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    url = (os.getenv("SUPABASE_URL") or "").strip()
+    key = (os.getenv("SUPABASE_KEY") or "").strip()
+
+    # Intelligent auto-detect if URL and KEY were accidentally swapped in environment variables
+    if url.startswith("ey") and (key.startswith("http://") or key.startswith("https://")):
+        url, key = key, url
+    elif not url.startswith("http") and "supabase.co" in key:
+        url, key = key, url
+
     if not url or not key:
         raise HTTPException(
             status_code=500,
@@ -45,8 +52,12 @@ def get_supabase():
 
 # Safe eager init if credentials exist
 try:
-    _url = os.getenv("SUPABASE_URL")
-    _key = os.getenv("SUPABASE_KEY")
+    _url = (os.getenv("SUPABASE_URL") or "").strip()
+    _key = (os.getenv("SUPABASE_KEY") or "").strip()
+    if _url.startswith("ey") and (_key.startswith("http://") or _key.startswith("https://")):
+        _url, _key = _key, _url
+    elif not _url.startswith("http") and "supabase.co" in _key:
+        _url, _key = _key, _url
     if _url and _key:
         supabase_client = create_client(_url, _key)
 except Exception:
@@ -67,12 +78,17 @@ class StudentUpdatePayload(BaseModel):
 
 @app.get("/health")
 def health_check():
-    has_url = bool(os.getenv("SUPABASE_URL"))
-    has_key = bool(os.getenv("SUPABASE_KEY"))
+    url = (os.getenv("SUPABASE_URL") or "").strip()
+    key = (os.getenv("SUPABASE_KEY") or "").strip()
+    if url.startswith("ey") and (key.startswith("http://") or key.startswith("https://")):
+        url, key = key, url
+    elif not url.startswith("http") and "supabase.co" in key:
+        url, key = key, url
+
     return {
         "status": "ok",
-        "supabase_configured": has_url and has_key,
-        "supabase_url": os.getenv("SUPABASE_URL") if has_url else None
+        "supabase_configured": bool(url and key),
+        "supabase_url": url if url else None
     }
 
 
