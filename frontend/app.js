@@ -4,9 +4,10 @@
  */
 
 // Host candidates to connect to FastAPI
-let API_BASE = (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000') 
-  ? 'full-stack-production-8a5c.up.railway.app' 
-  : window.location.origin;
+const RAILWAY_BACKEND = 'https://full-stack-production-8a5c.up.railway.app';
+let API_BASE = (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000' || window.location.port === '5173') 
+  ? RAILWAY_BACKEND 
+  : (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://127.0.0.1:8000' : window.location.origin);
 
 // App state
 let allStudents = [];
@@ -56,10 +57,11 @@ function showToast(message, type = 'success') {
   }, 3500);
 }
 
-// Resilient fetch with fallback between 127.0.0.1 and localhost, plus timeout
+// Resilient fetch with fallback between Railway, current origin, and local server
 async function apiFetch(endpoint, options = {}) {
   const hosts = [
     API_BASE,
+    RAILWAY_BACKEND,
     window.location.origin,
     'http://127.0.0.1:8000',
     'http://localhost:8000'
@@ -69,7 +71,7 @@ async function apiFetch(endpoint, options = {}) {
   let lastError = null;
   for (const host of uniqueHosts) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout for cold starts
 
     try {
       const res = await fetch(`${host}${endpoint}`, {
@@ -176,7 +178,14 @@ async function loadStudents() {
   try {
     const res = await apiFetch('/students');
     if (!res.ok) {
-      throw new Error(`Server returned HTTP ${res.status}`);
+      let errDetail = `Server returned HTTP ${res.status}`;
+      try {
+        const errJson = await res.json();
+        if (errJson && errJson.detail) {
+          errDetail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+        }
+      } catch (_) {}
+      throw new Error(errDetail);
     }
 
     const data = await res.json();
@@ -193,16 +202,18 @@ async function loadStudents() {
     console.error('Error fetching students:', err);
     tableEmpty.style.display = 'flex';
     emptyMessage.innerHTML = `
-      <span style="font-weight: 600; color: #ef4444;">Backend server is not reachable</span>
-      <span style="font-size: 0.85rem; color: #64748b; margin-top: 4px;">
-        Make sure FastAPI is running on port 8000:<br>
-        <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-family: monospace;">python -m uvicorn main:app --reload --port 8000</code>
+      <span style="font-weight: 600; color: #ef4444;">Backend / Database Notice</span>
+      <span style="font-size: 0.85rem; color: #64748b; margin-top: 6px; max-width: 480px; text-align: center; word-break: break-word;">
+        ${escapeHtml(err.message || 'Cannot connect to backend server')}
+      </span>
+      <span style="font-size: 0.78rem; color: #94a3b8; margin-top: 6px;">
+        Backend URL: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${escapeHtml(API_BASE)}</code>
       </span>
       <button class="btn btn-secondary" onclick="loadStudents()" style="margin-top: 10px; font-size: 0.8rem; padding: 0.4rem 0.8rem;">
         ↻ Retry Connection
       </button>
     `;
-    showToast('Cannot connect to FastAPI backend', 'error');
+    showToast(err.message || 'Cannot connect to backend', 'error');
   } finally {
     tableLoading.style.display = 'none';
   }

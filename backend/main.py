@@ -35,9 +35,12 @@ def get_supabase():
     if not url or not key:
         raise HTTPException(
             status_code=500,
-            detail="Supabase credentials missing. Set SUPABASE_URL and SUPABASE_KEY in environment variables."
+            detail="Supabase credentials missing. Please set SUPABASE_URL and SUPABASE_KEY in environment variables."
         )
-    supabase_client = create_client(url, key)
+    try:
+        supabase_client = create_client(url, key)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to initialize Supabase client: {str(e)}")
     return supabase_client
 
 # Safe eager init if credentials exist
@@ -62,6 +65,17 @@ class StudentUpdatePayload(BaseModel):
     marks: Optional[int] = None
 
 
+@app.get("/health")
+def health_check():
+    has_url = bool(os.getenv("SUPABASE_URL"))
+    has_key = bool(os.getenv("SUPABASE_KEY"))
+    return {
+        "status": "ok",
+        "supabase_configured": has_url and has_key,
+        "supabase_url": os.getenv("SUPABASE_URL") if has_url else None
+    }
+
+
 @app.post("/students")
 def create_student(
     name: Optional[str] = None, 
@@ -83,22 +97,31 @@ def create_student(
     }
 
     db = get_supabase()
-    response = db.table("students").insert(student).execute()
-    
-    return {
-        "message": "Student created successfully",
-        "data": response.data
-    }
+    try:
+        response = db.table("students").insert(student).execute()
+        return {
+            "message": "Student created successfully",
+            "data": response.data
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @app.get("/students")
 def show_all_student():
     db = get_supabase()
-    response = db.table("students").select("*").execute()
-    return {
-        "message": "All students",
-        "data": response.data
-    }
+    try:
+        response = db.table("students").select("*").execute()
+        return {
+            "message": "All students",
+            "data": response.data
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @app.patch("/students")
@@ -126,25 +149,37 @@ def update_student(
         student["marks"] = int(student_marks)
 
     db = get_supabase()
-    response = db.table("students").update(student).eq("id", target_id).execute()
-
-    return {
-        "message": f"Data of id {target_id} updated successfully.",
-        "data": response.data
-    }
+    try:
+        response = db.table("students").update(student).eq("id", target_id).execute()
+        return {
+            "message": f"Data of id {target_id} updated successfully.",
+            "data": response.data
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @app.delete("/students")
 def delete_student(id: int):
     db = get_supabase()
-    response = db.table("students").delete().eq("id", id).execute()
-    return {
-        "message": f"Data of id {id} deleted successfully.",
-        "data": response.data
-    }
+    try:
+        response = db.table("students").delete().eq("id", id).execute()
+        return {
+            "message": f"Data of id {id} deleted successfully.",
+            "data": response.data
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 # Mount frontend static directory as root (serves index.html, style.css, app.js)
-frontend_path = os.path.join(os.path.dirname(__file__), "frontend")
+frontend_path = os.path.join(os.path.dirname(__file__), "..", "frontend")
+if not os.path.exists(frontend_path):
+    frontend_path = os.path.join(os.path.dirname(__file__), "frontend")
+
 if os.path.exists(frontend_path):
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
